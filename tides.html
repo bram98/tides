@@ -1,0 +1,99 @@
+<!doctype html>
+<html>
+<head>
+	<title>lol</title>
+	<style>
+		html, body, canvas {margin:0px; padding:0px;}
+		#mainCanvas {background-color:white;}
+	</style>
+	<script src="vecnnn.js"></script>
+	<script>
+		var canvas, ctx;
+		var translate = new vec2(0,0);
+		var bigmass = new vec2(200,200);
+		var mouse = new vec2(0,0);
+		var vectors = [];
+		var amount = 20;
+		//function drawArrow(startPos, endPos, arrowHeadLength, arrowAngle){
+		//	var arrowHeadLength = arrowHeadLength||15;
+		//	var arrowAngle = arrowAngle || 0.4;
+		//	var angle = Math.atan2(endPos.y - startPos.y, endPos.x - startPos.x);
+		//	ctx.beginPath();
+		//	ctx.lineWidth = 1.5;
+		//	ctx.moveTo(startPos.x, startPos.y);
+		//	ctx.lineTo(endPos.x, endPos.y);
+		//	ctx.stroke();
+		//	ctx.lineWidth = 1;
+		//	ctx.lineTo(endPos.x + arrowHeadLength*Math.cos(Math.PI + angle - arrowAngle), endPos.y + arrowHeadLength*Math.sin(Math.PI + angle - arrowAngle));
+		//	ctx.lineTo(endPos.x + arrowHeadLength*Math.cos(Math.PI + angle + arrowAngle), endPos.y + arrowHeadLength*Math.sin(Math.PI + angle + arrowAngle));
+		//	ctx.lineTo(endPos.x, endPos.y);
+		//	ctx.fill();
+		//}
+		function gravityVector(pos, massPos, m, M){
+			this.pos = pos;
+			this.massPos = massPos;
+			this.dist = this.massPos.subtract(this.pos);
+			this.m = m;
+			this.M = M;
+			this.Mm = this.M*this.m;
+		}
+		gravityVector.prototype.draw = function(){
+			var strength = 1E5*this.Mm/this.dist.norm_2();
+			var lol = this.pos.add(this.dist.normalise().scale(strength)).add(translate);
+			lol = this.dist.normalise().scale(strength).add(translate);
+			//drawArrow(ctx, this.pos, lol, Math.min(lol.subtract(this.pos).length()*0.5,15) );
+			lol.draw(ctx, this.pos);
+		}
+		function createVectors(){
+			var vectors = [];
+			for(var i=0; i<amount; i++){
+				vectors.push( new gravityVector(
+					new vec2(
+						600 + 100*Math.cos(i/amount*2*Math.PI), 
+						200 + 100*Math.sin(i/amount*2*Math.PI)), 
+					bigmass, 5, 30) 
+				);
+			}
+			vectors.push( new gravityVector( new vec2(600, 200), bigmass, 5, 30) );
+			return vectors;
+		}
+		function init(){
+			canvas = document.getElementById("mainCanvas");
+			ctx = canvas.getContext("2d");
+			canvas.width = window.innerWidth;
+			canvas.onmousemove = function(e){
+				mouse = new vec2(e.x, e.y);
+			};
+			document.getElementById("arrowCount").value = amount;
+			var translatePos = new vec2(600,400);
+			
+			vectors = createVectors(2);
+			requestAnimationFrame(function frame(){
+				ctx.clearRect(0, 0, canvas.width, canvas.height);
+				ctx.beginPath();
+				ctx.arc(bigmass.x,bigmass.y,50,0,2*Math.PI);
+				ctx.stroke();
+				ctx.beginPath();
+				ctx.arc(600,200,100,0,2*Math.PI);
+				ctx.stroke();
+				translate.x = mouse.x - 600;
+				for(var i=0; i<vectors.length; i++){
+					vectors[i].draw();
+				}
+				//drawArrow(ctx, translatePos, translatePos.add(translate), Math.min(Math.abs(translate.x*0.5)||0, 15));
+				//drawArrow(ctx, translatePos, translatePos.add(translate), Math.min(Math.abs(translate.x*0.5)||0, 15));
+				translate.draw(ctx, translatePos);
+				setTimeout(frame,30);
+			});
+			
+		}
+	</script>
+</head>
+<body onload="init()">
+	<canvas id="mainCanvas" width="1000" height="500">unable to load canvas</canvas>
+	<div style="padding:10px;">
+		number of arrows: <input type="number" value="2" id="arrowCount" onchange="amount = +this.value;vectors = createVectors();"><br>
+		position left body: <input type="number" value="200" onchange="bigmass.x = +this.value;vectors = createVectors();">
+	</div>
+</body>
+</html>
